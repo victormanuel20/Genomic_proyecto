@@ -11,6 +11,7 @@ import org.vicnata.modelosDTO.Mensaje;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Scanner;
+import org.vicnata.MenuCliente.MenuCliente;
 
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
@@ -80,6 +81,7 @@ public class Main {
         */
 
 
+        /*
         //PRUEBA YA CON RUTAA Y QUE DEVUELVE
         // Simulación de datos de un paciente
         Map<String,String> datos = new LinkedHashMap<>();
@@ -106,6 +108,11 @@ public class Main {
         System.out.println("Mensaje generado:");
         System.out.println(msg.getPayload());
 
+        */
+
+        //ConfigSSL.configurar();
+        MenuCliente menuCliente = new MenuCliente();
+        menuCliente.mostrar();
 
 
     }

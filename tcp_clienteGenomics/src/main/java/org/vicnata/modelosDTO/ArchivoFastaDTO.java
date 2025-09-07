@@ -14,4 +14,5 @@ public class ArchivoFastaDTO {
     private String algoritmoHash;     // "MD5" o "SHA-256"
     private String checksum;          // hash calculado
     private String contenidoBase64;   // contenido del archivo en Base64
+    private String ruta;
 }

@@ -30,7 +30,8 @@ public class ManejadorFasta {
                     size,
                     algoritmoHash,
                     checksum,
-                    contenidoBase64
+                    contenidoBase64,
+                    ruta
             );
         } catch (Exception e) {
             throw new RuntimeException("Error leyendo FASTA: " + ruta, e);
