@@ -1,5 +1,6 @@
 package org.vicnata.MenuCliente;
 
+import org.vicnata.Red.TCPcliente;
 import org.vicnata.enums.Operacion;
 import org.vicnata.enums.sexo;
 import org.vicnata.helpers.ManejadorFasta;
@@ -7,6 +8,7 @@ import org.vicnata.helpers.ProtocolManager;
 import org.vicnata.modelosDTO.ArchivoFastaDTO;
 import org.vicnata.modelosDTO.Mensaje;
 import org.vicnata.modelosDTO.PacienteDTO;
+import org.vicnata.helpers.GestorPropiedades;
 
 
 import java.util.HashMap;
@@ -14,6 +16,27 @@ import java.util.Map;
 import java.util.Scanner;
 
 public class MenuCliente {
+
+    private TCPcliente tpcCliente;
+    private String SERVER_IP;
+    private int SERVER_PORT;
+
+    public MenuCliente() {
+        GestorPropiedades gestor = new GestorPropiedades();
+
+        // Obtener las propiedades desde el archivo
+        SERVER_IP = gestor.getProperty("SERVER_HOST");
+        SERVER_PORT = Integer.parseInt(gestor.getProperty("SERVER_PORT"));
+        // Mostrar en consola para verificar
+        System.out.println("IP del servidor cargada: " + SERVER_IP);
+        System.out.println("Puerto del servidor cargado: " + SERVER_PORT);
+
+
+        // Crear el cliente TCP con los valores obtenidos
+        this.tpcCliente = new TCPcliente(SERVER_IP, SERVER_PORT);
+
+
+    }
 
     private final Scanner in = new Scanner(System.in);
     private static final String HASH_DEF = "SHA-256"; // algoritmo por defecto
@@ -55,8 +78,9 @@ public class MenuCliente {
                     System.out.println(ruta);
                     ProtocolManager pm = new ProtocolManager(); // o new ProtocolManager("min","SHA-256")
                     Mensaje msg = pm.buildMessage(Operacion.CREATE, payload,ruta);
+                    System.out.println("Lo que se enviara al servidor");
                     System.out.println(msg.getPayload());
-                    
+                    tpcCliente.sendMessage(msg.getPayload());
 
 
                 }
