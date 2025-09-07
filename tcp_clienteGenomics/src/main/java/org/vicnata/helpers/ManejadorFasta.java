@@ -112,4 +112,19 @@ public class ManejadorFasta {
         }
     }
 
+    public static String extraerHeaderId(String ruta) {
+        try {
+            for (String line : Files.readAllLines(Path.of(ruta))) {
+                if (line.startsWith(">")) {
+                    return line.substring(1).trim(); // quita el '>'
+                }
+            }
+            return null; // no había header
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo leer header del FASTA: " + ruta, e);
+        }
+    }
+
+
+
 }

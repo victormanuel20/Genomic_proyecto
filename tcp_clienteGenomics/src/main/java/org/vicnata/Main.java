@@ -1,10 +1,15 @@
 package org.vicnata;
 
 import org.vicnata.config.ConfigSSL;
+import org.vicnata.enums.Operacion;
 import org.vicnata.helpers.GestorPropiedades;
 import org.vicnata.helpers.ManejadorFasta;
+import org.vicnata.helpers.ProtocolManager;
 import org.vicnata.modelosDTO.ArchivoFastaDTO;
+import org.vicnata.modelosDTO.Mensaje;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 
@@ -17,7 +22,7 @@ public class Main {
 
     //Prueba numero 1 se configura el gestor de propiedades
     //ConfigSSL.configurar("src/main/java/org/vicnata/configuration.properties");
-      ConfigSSL.configurar();
+      //ConfigSSL.configurar();
 
 
 
@@ -73,6 +78,35 @@ public class Main {
         System.out.println(" - " + outLegible + " (legible con cabecera)");
 
         */
+
+
+        //PRUEBA YA CON RUTAA Y QUE DEVUELVE
+        // Simulación de datos de un paciente
+        Map<String,String> datos = new LinkedHashMap<>();
+        datos.put("NOMBRE","Ana");
+        datos.put("APELLIDO","Ruiz");
+        datos.put("ID","CC-9988");
+        datos.put("EDAD","29");
+        datos.put("SEXO","F");
+        datos.put("CONTACT_EMAIL","ana@mail.com");
+        datos.put("CLINICAL_NOTES","Control prenatal");
+
+        // Ruta al archivo FASTA (ajusta según tu caso)
+        // 🔹 opción A (ruta absoluta en tu PC):
+         String rutaFasta = "C:/Users/User/Desktop/paciente1.fasta";
+
+        // 🔹 opción B (archivo dentro del proyecto):
+        //String rutaFasta = "data/fasta/paciente1.fasta";
+
+        // Construcción del mensaje usando nuestro ProtocolManager
+        ProtocolManager pm = new ProtocolManager();
+        Mensaje msg = pm.buildMessage(Operacion.CREATE, datos, rutaFasta);
+
+        // Imprime el string final que se enviaría al servidor
+        System.out.println("Mensaje generado:");
+        System.out.println(msg.getPayload());
+
+
 
     }
 }
