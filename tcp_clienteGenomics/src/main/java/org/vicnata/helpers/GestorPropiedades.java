@@ -3,15 +3,27 @@ package org.vicnata.helpers;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+
+
+import lombok.Data;
+@Data
 
 public class GestorPropiedades {
     private final Properties props = new Properties();
 
-    public GestorPropiedades(String rutaArchivo) {
-        try (FileInputStream fis = new FileInputStream(rutaArchivo)) {
+    // Ruta fija del archivo de propiedades
+    private static final String CONFIG_FILE = "src/main/java/org/vicnata/configuration.properties";
+
+    public GestorPropiedades() {
+        try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
             props.load(fis);
         } catch (IOException e) {
-            throw new RuntimeException("No se pudo cargar el archivo de propiedades: " + rutaArchivo, e);
+            Logger.getLogger(GestorPropiedades.class.getName())
+                    .log(Level.SEVERE, "No se pudo cargar el archivo de propiedades: " + CONFIG_FILE, e);
+            throw new RuntimeException("No se pudo cargar el archivo de propiedades: " + CONFIG_FILE, e);
         }
     }
 

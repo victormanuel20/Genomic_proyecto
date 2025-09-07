@@ -68,4 +68,48 @@ public class ManejadorFasta {
             throw new RuntimeException("Algoritmo de hash no soportado: " + algorithm, e);
         }
     }
+
+    /** Escribe el FASTA en disco.
+     *  incluirCabecera=false → escribe los MISMOS bytes (ideal para integridad).
+     *  incluirCabecera=true  → genera FASTA legible (header '>' y secuencia envuelta).
+     */
+    public static void escribirFasta(ArchivoFastaDTO dto, String rutaSalida, boolean incluirCabecera) {
+        try {
+            String limpia = rutaSalida.trim().replace("\"","").replace("'","");
+            Path out = Path.of(limpia);
+            if (out.getParent() != null) Files.createDirectories(out.getParent());
+
+            byte[] bytes = Base64.getDecoder().decode(dto.getContenidoBase64());
+
+            if (!incluirCabecera) {
+                // Escritura EXACTA (mismos bytes que se leyeron) → checksum coincide
+                Files.write(out, bytes);
+                return;
+            }
+
+            // Escritura “legible”: header y solo secuencia sin líneas '>'
+            String contenido = new String(bytes); // texto FASTA
+            StringBuilder sbSeq = new StringBuilder();
+            for (String line : contenido.split("\\R")) {
+                if (!line.startsWith(">")) sbSeq.append(line.trim());
+            }
+            String seq = sbSeq.toString();
+
+            String header = dto.getIdPaciente() != null
+                    ? (">" + dto.getIdPaciente())
+                    : (">" + (dto.getNombreArchivo() != null ? dto.getNombreArchivo() : "genome"));
+
+            int wrap = 60; // 60 chars por línea
+            StringBuilder fastaLegible = new StringBuilder();
+            fastaLegible.append(header).append("\n");
+            for (int i = 0; i < seq.length(); i += wrap) {
+                fastaLegible.append(seq, i, Math.min(i + wrap, seq.length())).append("\n");
+            }
+
+            Files.writeString(out, fastaLegible.toString());
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo escribir FASTA en " + rutaSalida, e);
+        }
+    }
+
 }

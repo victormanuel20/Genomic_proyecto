@@ -3,8 +3,8 @@ package org.vicnata.config;
 import org.vicnata.helpers.GestorPropiedades;
 
 public class ConfigSSL {
-    public static void configurar(String rutaProperties) {
-        GestorPropiedades gestor = new GestorPropiedades(rutaProperties);
+    public static void configurar() {
+        GestorPropiedades gestor = new GestorPropiedades();
 
         String certificateRoute = gestor.getProperty("SSL_CERTIFICATE_ROUTE");
         String certificatePassword = gestor.getProperty("SSL_PASSWORD");
