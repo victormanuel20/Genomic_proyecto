@@ -15,7 +15,7 @@ public class GestorPropiedades {
     private final Properties props = new Properties();
 
     // Ruta fija del archivo de propiedades
-    private static final String CONFIG_FILE = "src/main/java/org/vicnata/configuration.properties";
+    private static final String CONFIG_FILE = "C:\\Users\\User\\Desktop\\Genomic_proyecto\\tcp_clienteGenomics\\configuration.properties";
 
     public GestorPropiedades() {
         try (FileInputStream fis = new FileInputStream(CONFIG_FILE)) {
