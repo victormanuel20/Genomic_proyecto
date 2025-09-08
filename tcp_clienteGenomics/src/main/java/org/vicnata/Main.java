@@ -110,7 +110,7 @@ public class Main {
 
         */
 
-        //ConfigSSL.configurar();
+        ConfigSSL.configurar();
         MenuCliente menuCliente = new MenuCliente();
         menuCliente.mostrar();
 
