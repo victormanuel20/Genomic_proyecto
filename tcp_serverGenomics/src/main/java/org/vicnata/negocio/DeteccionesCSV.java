@@ -20,7 +20,8 @@ public class DeteccionesCSV {
             if (csv.getParent() != null) Files.createDirectories(csv.getParent());
             if (Files.notExists(csv)) {
                 try (BufferedWriter w = Files.newBufferedWriter(csv, StandardCharsets.UTF_8)) {
-                    w.write("patient_id,disease_id,severity,datetime,description\n");
+                    // NUEVOS CAMPOS: full_name y document_id
+                    w.write("patient_id,full_name,document_id,disease_id,severity,datetime,description\n");
                 }
             }
         } catch (IOException e) {
@@ -28,9 +29,12 @@ public class DeteccionesCSV {
         }
     }
 
-    public void append(String patientId, String diseaseId, int severity, String description) {
+    public void append(String patientId, String fullName, String documentId,
+                       String diseaseId, int severity, String description) {
         String line = String.join(",",
                 csv(patientId),
+                csv(fullName),
+                csv(documentId),
                 csv(diseaseId),
                 String.valueOf(severity),
                 csv(UtilFechas.ahoraIsoBogota()),

@@ -2,3 +2,4 @@ patient_id,disease_id,severity,datetime,description
 P-0008,sarscov2,9,2025-09-08T01:44:55.1507391,Matched 15/15 bases (100%)
 P-0009,anemia_falciforme,8,2025-09-08T01:53:33.0190474,Matched 15/15 bases (100%)
 P-0010,anemia_falciforme,8,2025-09-08T02:15:46.7527677,Matched 15/15 bases (100%)
+P-0011,luciana perez,1002593145,anemia_falciforme,8,2025-09-08T02:40:53.687879,Matched 15/15 bases (100%)

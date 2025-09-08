@@ -119,20 +119,22 @@ public class CreateHandler implements OperationHandler {
                     EnfermedadDetector.detectar(secuencia, catalogo);
 
             // 9) Registrar detecciones y armar notificación
-            String detectionsOut;
+
+            String fullName = nombre + " " + apellido;
             if (!hits.isEmpty()) {
                 DeteccionesCSV rep = new DeteccionesCSV(pathCsvDetecciones);
 
-                detectionsOut = hits.stream().map(d -> {
+                String detectionsOut = hits.stream().map(d -> {
                     int sev = sevPorId.getOrDefault(d.diseaseId, 0);
-                    rep.append(patientId, d.diseaseId, sev, d.description);
+                    rep.append(patientId, fullName, docId, d.diseaseId, sev, d.description);
                     return d.diseaseId + "(" + sev + ")";
                 }).collect(Collectors.joining(";"));
 
-                // Respuesta con notificación inmediata
-                return ProtocolManager.ok("CREATE",  "CREATED|" + patientId + "|" + nombre + " " + apellido + "|" + docId + "|DETECTIONS=" + detectionsOut);
+                return ProtocolManager.ok("CREATE",
+                        "CREATED|" + patientId + "|" + fullName + "|" + docId + "|DETECTIONS=" + detectionsOut);
             } else {
-                return ProtocolManager.ok("CREATE", "CREATED|" + patientId + "|" + nombre + " " + apellido + "|" + docId + "|DETECTIONS=NONE");
+                return ProtocolManager.ok("CREATE",
+                        "CREATED|" + patientId + "|" + fullName + "|" + docId + "|DETECTIONS=NONE");
             }
 
         } catch (IllegalArgumentException ex) {
