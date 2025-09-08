@@ -1,4 +1,4 @@
 package org.vicnata.red;
 
-public class TCPServer {
+public class TCPThread {
 }

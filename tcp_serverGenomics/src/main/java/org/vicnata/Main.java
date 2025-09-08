@@ -2,15 +2,7 @@ package org.vicnata;
 
 import org.vicnata.config.ConfigSSL;
 import org.vicnata.helpers.GestorPropiedades;
-import org.vicnata.red.TCPServer;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.vicnata.red.TCPServer1;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
@@ -27,9 +19,8 @@ public class Main {
 
 
         // 3. Iniciar servidor
-        TCPServer server = new TCPServer(2020);
+        TCPServer1 server = new TCPServer1(2020);
         server.start();
-
 
     }
 }
