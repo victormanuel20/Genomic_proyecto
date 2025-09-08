@@ -2,6 +2,7 @@ package org.vicnata.operations;
 
 import org.vicnata.dto.PacienteDTO;
 import org.vicnata.helpers.GestorPropiedades;
+import org.vicnata.negocio.FastaStorage;
 import org.vicnata.negocio.GestorCSV;
 import org.vicnata.red.ProtocolManager;
 import org.vicnata.utils.IdGenerator;
@@ -42,6 +43,20 @@ public class CreateHandler implements OperationHandler {
 
             // 3) Generar patient_id único
             String patientId = IdGenerator.nextPatientId(pathData);
+
+            // 3.1) Guardar archivo FASTA si viene secuencia o base64
+            String pathFastaDir = cfg.getProperty("PATH_FASTA_STORAGE"); // ej. ./data/fasta
+            FastaStorage storage = new FastaStorage(pathFastaDir);
+
+            if (p.length >= 14 && p[13] != null && !p[13].isBlank()) {
+                // El cliente envió el archivo completo en base64
+                storage.guardarExactoDesdeBase64(patientId, p[13]);
+            } else {
+                // El cliente envió solo la secuencia en texto plano
+                String secuencia = p[9];
+                storage.guardarLegibleDesdeSecuencia(patientId, secuencia);
+            }
+
 
             // 4) Armar DTO y guardar en CSV
             PacienteDTO pac = new PacienteDTO();
