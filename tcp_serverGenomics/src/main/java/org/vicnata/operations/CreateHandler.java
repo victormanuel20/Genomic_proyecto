@@ -33,6 +33,13 @@ public class CreateHandler implements OperationHandler {
             String pathData        = cfg.getProperty("PATH_DATA");              // ej. ./data
             String pathCsvPacientes= cfg.getProperty("PATH_CSV_PACIENTES");     // ej. ./data/pacientes.csv
 
+            GestorCSV repo = new GestorCSV(pathCsvPacientes);
+            // 2.1) Verificar duplicado por document_id
+            if (repo.existePorDocumento(docId)) {
+                return ProtocolManager.error("CREATE", "DUPLICATE_DOCUMENT_ID|" + docId);
+            }
+
+
             // 3) Generar patient_id único
             String patientId = IdGenerator.nextPatientId(pathData);
 
@@ -48,7 +55,6 @@ public class CreateHandler implements OperationHandler {
             pac.setClinicalNotes(notas);
             pac.setActive(true);
 
-            GestorCSV repo = new GestorCSV(pathCsvPacientes);
             repo.appendPaciente(pac);
 
             // 5) Responder OK con el patient_id oficial del servidor

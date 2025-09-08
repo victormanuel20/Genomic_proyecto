@@ -1,12 +1,14 @@
 package org.vicnata.negocio;
 
 import org.vicnata.dto.PacienteDTO;
+import org.vicnata.utils.UtilFechas;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.time.Instant;
+import java.util.stream.Stream;
 
 public class GestorCSV {
     private final Path pacientesCsv;
@@ -37,7 +39,7 @@ public class GestorCSV {
                 String.valueOf(p.getEdad()),
                 csv(p.getSexo()),
                 csv(p.getContactEmail()),
-                csv(Instant.now().toString()),
+                csv(org.vicnata.utils.UtilFechas.ahoraIsoBogota()), // se cambia por la fecha
                 csv(p.getClinicalNotes()),
                 csv(""),                      // checksum_fasta (por ahora vacío)
                 csv(""),                      // file_size_bytes (por ahora vacío)
@@ -54,6 +56,24 @@ public class GestorCSV {
             throw new RuntimeException("No se pudo escribir en pacientes.csv", e);
         }
     }
+
+    public boolean existePorDocumento(String documentId) {
+        try (Stream<String> lines = Files.lines(pacientesCsv)) {
+            return lines
+                    .skip(1) // saltar cabecera
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .anyMatch(line -> {
+                        // columnas: patient_id,full_name,document_id,age,...
+                        // OJO: esto es un parse MUY simple (sin comillas/escapes). Te servirá de momento.
+                        String[] cols = line.split(",", -1);
+                        return cols.length >= 3 && documentId.equals(cols[2]);
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo leer pacientes.csv", e);
+        }
+    }
+
 
     private static String csv(String v) {
         if (v == null) return "";
