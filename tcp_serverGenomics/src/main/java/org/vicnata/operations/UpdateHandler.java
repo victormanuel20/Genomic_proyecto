@@ -1,4 +1,10 @@
 package org.vicnata.operations;
 
-public class UpdateHandler {
+import org.vicnata.red.ProtocolManager;
+
+public class UpdateHandler implements OperationHandler {
+    @Override
+    public String handle(String[] p) {
+        return ProtocolManager.ok("UPDATE", "PENDING");
+    }
 }
