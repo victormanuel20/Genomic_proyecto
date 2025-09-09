@@ -9,61 +9,66 @@ import java.util.Map;
 /**
  * ProtocolManager (cliente) – estilo profesor.
  *
- * - buildMessage(...) con switch por operación.
- * - buildCreatePersonMessage(...) concatena un String plano con "\" siguiendo
- *   un orden fijo de campos (¡el orden importa en el protocolo!).
- * - Usa ManejadorFasta.leerFasta(...) para armar el bloque del archivo.
+ * Estructura:
+ *  - buildMessage(...) con switch por operación.
+ *  - buildCreatePersonMessage(...) concatena un String con "\" en orden fijo.
+ *  - buildRetrieveMessage(...) arma "RETRIEVE\patient_id".
  *
- * Formato propuesto para CREATE:
- *   CREATE\NOMBRE\APELLIDO\ID\EDAD\SEXO\CONTACT_EMAIL\CLINICAL_NOTES
- *         \NOMBRE_ARCHIVO\TAMANO_BYTES\HASH_ALGO\CHECKSUM\CONTENIDO_BASE64
+ * Formato propuesto:
+ *  CREATE\NOMBRE\APELLIDO\ID\EDAD\SEXO\CONTACT_EMAIL\CLINICAL_NOTES
+ *        \FASTA_HEADER_ID\SECUENCIA\FILE_SIZE_BYTES\HASH_ALGO\CHECKSUM\BASE64
  *
- * NOTA: Si más adelante tu profe exige otro orden, solo cambia el array 'CAMPOS_CREATE'
- *       o el orden de los campos del bloque FASTA.
+ *  RETRIEVE\PATIENT_ID
+ *
+ *
  */
 public class ProtocolManager {
 
-    // Separador de campos y marcador de vacío
+    // Separador y marcador nulo
     private static final String SEP = "\\";
     private static final String NIL = "-";
 
-    // Algoritmo por defecto para el checksum del FASTA (puedes leerlo luego de properties)
+    // Algoritmo por defecto de hash (puedes leerlo de properties si quieres)
     private static final String HASH_DEF = "SHA-256";
 
+    // Claves esperadas en payload
+    private static final String K_PATIENT_ID = "PATIENT_ID";
+
     /**
-     * Método general: construye mensajes dependiendo de la operación.
-     * Aquí dejamos listos los casos; hoy nos enfocamos en CREATE.
+     * Router principal de construcción de mensajes.
      */
     public Mensaje buildMessage(Operacion operacion, Map<String, String> payload, String fastaPath) {
         switch (operacion) {
             case CREATE:
                 return this.buildCreatePersonMessage(payload, fastaPath);
-            case UPDATE:
-                // TODO: implementar (metadata o con FASTA)
-                break;
+
             case RETRIEVE:
-                // TODO: implementar (ej. "RETRIEVE\patientId")
-                break;
+                return this.buildRetrieveMessage(payload);
+
+            case UPDATE:
+                // TODO: implementar (ej. UPDATE\patientId\campos...)
+                return null;
+
             case DELETE:
-                // TODO: implementar (ej. "DELETE\patientId")
-                break;
+                // TODO: implementar (ej. DELETE\patientId)
+                return null;
+
             default:
                 System.out.println("Operación no soportada: " + operacion);
+                return null;
         }
-        return null;
     }
 
     /**
-     * Construye el mensaje CREATE concatenando los campos en el orden definido.
-     * - Primero agrega la palabra de la operación ("CREATE")
-     * - Luego agrega los campos de metadata del paciente en el orden del array
-     * - Finalmente añade los datos del archivo FASTA obtenidos del ManejadorFasta
+     * CREATE:
+     *  - Primero metadata en orden fijo.
+     *  - Luego bloque FASTA (header id, secuencia, tamaño, hash, checksum, base64).
      */
     private Mensaje buildCreatePersonMessage(Map<String, String> payload, String fastaPath) {
         StringBuilder sb = new StringBuilder();
-        sb.append(Operacion.CREATE.name()); // "CREATE" al inicio
+        sb.append(Operacion.CREATE.name()); // "CREATE"
 
-        // 1) Campos de METADATA en orden fijo (evitar forEach sobre el Map sin orden)
+        // 1) METADATA en orden fijo
         final String[] CAMPOS_CREATE = {
                 "NOMBRE", "APELLIDO", "ID", "EDAD", "SEXO", "CONTACT_EMAIL", "CLINICAL_NOTES"
         };
@@ -71,39 +76,43 @@ public class ProtocolManager {
             sb.append(SEP).append(val(payload.get(clave)));
         }
 
-        // 2) Bloque FASTA usando tu ManejadorFasta y tu ArchivoFastaDTO
-        //    Tu DTO tiene: idPaciente, nombreArchivo, tamanoBytes, algoritmoHash, checksum, contenidoBase64
+        // 2) FASTA (usando tu ManejadorFasta)
         ArchivoFastaDTO fasta = ManejadorFasta.leerFasta(fastaPath, HASH_DEF);
 
-        /*
-        sb.append(SEP).append(val(fasta.getIdPaciente()));
-        sb.append(SEP).append(val(fasta.getNombreArchivo()));       // nombre del archivo .fasta
-        sb.append(SEP).append(String.valueOf(fasta.getTamanoBytes())); // tamaño bytes
-        sb.append(SEP).append(val(fasta.getAlgoritmoHash()));       // "SHA-256" o "MD5"
-        sb.append(SEP).append(val(fasta.getChecksum()));            // checksum en HEX
-        sb.append(SEP).append(val(fasta.getContenidoBase64()));     // contenido en Base64 (bytes exactos)
-         */
+        // HeaderId (>linea sin '>') y secuencia plana
+        String headerId  = ManejadorFasta.extraerHeaderId(fastaPath);
+        String secuencia = ManejadorFasta.extraerSoloSecuencia(fastaPath);
 
-        // === Parte FASTA ===
-        String headerId = org.vicnata.helpers.ManejadorFasta.extraerHeaderId(fastaPath);
-        String secuencia = org.vicnata.helpers.ManejadorFasta.extraerSoloSecuencia(fastaPath);
+        sb.append(SEP).append(val(headerId));                          // 8
+        sb.append(SEP).append(val(secuencia));                         // 9
+        sb.append(SEP).append(String.valueOf(fasta.getTamanoBytes())); // 10
+        sb.append(SEP).append(val(fasta.getAlgoritmoHash()));          // 11
+        sb.append(SEP).append(val(fasta.getChecksum()));               // 12
+        sb.append(SEP).append(val(fasta.getContenidoBase64()));        // 13
 
-        sb.append(SEP).append(val(headerId));   // ID del header '>'
-        sb.append(SEP).append(val(secuencia));  // secuencia concatenada
-        sb.append(SEP).append(String.valueOf(fasta.getTamanoBytes())); // obligatorio
-        sb.append(SEP).append(val(fasta.getAlgoritmoHash()));          // obligatorio
-        sb.append(SEP).append(val(fasta.getChecksum()));               // obligatorio
-        sb.append(SEP).append(val(fasta.getContenidoBase64()));        // opcional (pero recomendado)
-
-        // Devuelve el Mensaje como en el ejemplo del profe (acción + payload concatenado)
+        // Devuelve como "acción + payload" (estilo profe)
         return new Mensaje(Operacion.CREATE, sb.toString());
     }
 
-    // ----------------- Helpers pequeños -----------------
+    /**
+     * RETRIEVE:
+     *  - Estructura simple: "RETRIEVE\PATIENT_ID"
+     *  - Lee el patient_id desde payload[K_PATIENT_ID]
+     */
+    private Mensaje buildRetrieveMessage(Map<String, String> payload) {
+        String patientId = payload != null ? payload.get(K_PATIENT_ID) : null;
+        if (patientId == null || patientId.isBlank()) {
+            // Si lo mandan vacío, lo marcamos con NIL para no romper el protocolo
+            patientId = NIL;
+        }
+        String wire = Operacion.RETRIEVE.name() + SEP + patientId;
+        return new Mensaje(Operacion.RETRIEVE, wire);
+    }
 
-    /** Convierte null/vacíos en marcador NIL para que el protocolo no se rompa. */
+    // ----------------- Helpers -----------------
+
+    /** Convierte null/vacíos en marcador NIL para no romper el protocolo. */
     private static String val(String s) {
         return (s == null || s.isBlank()) ? NIL : s.trim();
     }
 }
-

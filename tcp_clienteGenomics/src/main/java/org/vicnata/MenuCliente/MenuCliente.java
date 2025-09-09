@@ -84,7 +84,22 @@ public class MenuCliente {
 
 
                 }
-                case 2 -> System.out.println("[RETRIEVE] (pendiente)");
+                case 2 -> {
+                    System.out.println("\n[RETRIEVE] Ingresa el patient_id a consultar:");
+                    String patientId = leerNoVacio();
+
+                    // Armamos payload mínimo con PATIENT_ID (coincide con ProtocolManager)
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("PATIENT_ID", patientId);
+
+                    ProtocolManager pm = new ProtocolManager();
+                    Mensaje msg = pm.buildMessage(Operacion.RETRIEVE, payload, null);
+
+                    System.out.println("Lo que se enviará al servidor:");
+                    System.out.println(msg.getPayload());
+
+                    tpcCliente.sendMessage(msg.getPayload());
+                }
                 case 3 -> System.out.println("[UPDATE] (pendiente)");
                 case 4 -> System.out.println("[DELETE] (pendiente)");
                 case 5 -> System.out.println("Saliendo...");
