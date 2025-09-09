@@ -139,7 +139,22 @@ public class MenuCliente {
                 }
 
                 case 3 -> System.out.println("[UPDATE] (pendiente)");
-                case 4 -> System.out.println("[DELETE] (pendiente)");
+                case 4 -> {
+                    System.out.println("\n[DELETE] Ingresa el patient_id a inactivar:");
+                    String pid = leerNoVacio();
+
+                    Map<String,String> payload = new HashMap<>();
+                    payload.put("PATIENT_ID", pid);
+
+                    ProtocolManager pm = new ProtocolManager();
+                    Mensaje msg = pm.buildMessage(Operacion.DELETE, payload, null);
+
+                    System.out.println("Lo que se enviará al servidor:");
+                    System.out.println(msg.getPayload());
+
+                    String response = tpcCliente.sendMessage(msg.getPayload());
+                    System.out.println("Respuesta: " + response);
+                }
                 case 5 -> System.out.println("Saliendo...");
                 default -> System.out.println("Opción inválida.");
             }

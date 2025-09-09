@@ -51,7 +51,7 @@ public class ProtocolManager {
 
             case DELETE:
                 // TODO: implementar (ej. DELETE\patientId)
-                return null;
+                return this.buildDeleteMessage(payload);
 
             default:
                 System.out.println("Operación no soportada: " + operacion);
@@ -107,6 +107,15 @@ public class ProtocolManager {
         }
         String wire = Operacion.RETRIEVE.name() + SEP + patientId;
         return new Mensaje(Operacion.RETRIEVE, wire);
+    }
+
+
+    // --- método nuevo en ProtocolManager ---
+    /** Formato: DELETE\PATIENT_ID */
+    private Mensaje buildDeleteMessage(Map<String,String> payload) {
+        String pid = payload.getOrDefault("PATIENT_ID", "-");
+        String wire = Operacion.DELETE.name() + SEP + val(pid);
+        return new Mensaje(Operacion.DELETE, wire);
     }
 
     // ----------------- Helpers -----------------

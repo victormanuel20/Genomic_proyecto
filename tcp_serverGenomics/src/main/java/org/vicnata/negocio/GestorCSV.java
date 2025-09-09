@@ -144,6 +144,49 @@ public class GestorCSV {
         }
     }
 
+    // Marca al paciente como inactivo (active=false). Devuelve true si lo encontró y actualizó.
+    public boolean marcarInactivo(String patientId) {
+        try {
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(pacientesCsv, java.nio.charset.StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return false;
+
+            String header = lines.get(0);
+            java.util.List<String> out = new java.util.ArrayList<>();
+            out.add(header);
+
+            boolean actualizado = false;
+
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.trim().isEmpty()) { out.add(line); continue; }
+
+                String[] c = line.split(",", -1);
+                String pid = col(c, 0);
+                if (patientId.equals(pid)) {
+                    // columnas (por tu header actual):
+                    // 0 patient_id, 1 full_name, 2 document_id, 3 age, 4 sex, 5 contact_email,
+                    // 6 registration_date, 7 clinical_notes, 8 checksum_fasta, 9 file_size_bytes, 10 active
+                    c[10] = "false";
+                    String newLine = String.join(",",
+                            c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7], c[8], c[9], c[10]
+                    );
+                    out.add(newLine);
+                    actualizado = true;
+                } else {
+                    out.add(line);
+                }
+            }
+
+            java.nio.file.Files.write(pacientesCsv, out, java.nio.charset.StandardCharsets.UTF_8,
+                    java.nio.file.StandardOpenOption.TRUNCATE_EXISTING, java.nio.file.StandardOpenOption.CREATE);
+
+            return actualizado;
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("No se pudo actualizar pacientes.csv", e);
+        }
+    }
+
+
     // ------------------ helpers locales de parsing ------------------
     private static String col(String[] arr, Integer i) {
         if (i == null || i < 0 || i >= arr.length) return "";
