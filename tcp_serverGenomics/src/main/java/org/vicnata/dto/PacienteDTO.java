@@ -10,16 +10,21 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PacienteDTO {
-    private String patientId;
-    private String nombre;
-    private String apellido;
-    private String documentId;
-    private int edad;
-    private String sexo;           // "M" / "F"
-    private String contactEmail;
-    private String clinicalNotes;
-    private boolean active = true;
 
+    private String patientId;        // P-0001
+    private String nombre;           // "victor"
+    private String apellido;         // "garcia"
+    private String documentId;       // "1002..."
+    private int    edad;             // 20
+    private String sexo;             // "M" / "F"
+    private String contactEmail;     // "victor@mail..."
+    private String clinicalNotes;    // "ninguna"
+
+    // Campos que guardas en CSV
+    private String registrationDate; // ISO (se escribe con UtilFechas.ahoraIsoBogota())
+    private String checksumFasta;    // puede ser vacío si no vino
+    private long   fileSizeBytes;    // puede ser 0 si no vino
+    private boolean active = true;   // por defecto true
     public String getFullName() {
         return (nombre == null ? "" : nombre) + " " + (apellido == null ? "" : apellido);
     }

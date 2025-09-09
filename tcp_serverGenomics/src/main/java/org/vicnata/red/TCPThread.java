@@ -53,7 +53,7 @@ public class TCPThread extends Thread {
             // Selección del handler correspondiente según la operación recibida
             OperationHandler handler = switch (op) {
                 case "CREATE"   -> new CreateHandler(audit);   // Handler para operación CREATE
-                //case "RETRIEVE" -> new RetrieveHandler(audit); // Handler para operación RETRIEVE (comentado por ahora)
+                case "RETRIEVE" -> new RetrieveHandler(audit); // Handler para operación RETRIEVE (comentado por ahora)
                 //case "UPDATE"   -> new UpdateHandler(audit);   // Handler para operación UPDATE (comentado por ahora)
                 //case "DELETE"   -> new DeleteHandler(audit);   // Handler para operación DELETE (comentado por ahora)
                 default         -> null;                        // Si no se reconoce la operación, se asigna null
