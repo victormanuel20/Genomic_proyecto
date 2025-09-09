@@ -88,7 +88,7 @@ public class MenuCliente {
                     System.out.println("\n[RETRIEVE] Ingresa el patient_id a consultar:");
                     String patientId = leerNoVacio();
 
-                    // Armamos payload mínimo con PATIENT_ID (coincide con ProtocolManager)
+                    // Armamos payload mínimo con PATIENT_ID
                     Map<String, String> payload = new HashMap<>();
                     payload.put("PATIENT_ID", patientId);
 
@@ -98,8 +98,46 @@ public class MenuCliente {
                     System.out.println("Lo que se enviará al servidor:");
                     System.out.println(msg.getPayload());
 
-                    tpcCliente.sendMessage(msg.getPayload());
+                    // Enviamos y recibimos respuesta
+                    String response = tpcCliente.sendMessage(msg.getPayload());
+
+                    // === Parser bonito para respuesta de RETRIEVE ===
+                    String[] parts = response.split("\\|", -1);
+                    if (parts.length >= 15 && "OK".equals(parts[0]) && "RETRIEVE".equals(parts[1]) && "FOUND".equals(parts[2])) {
+                        System.out.println("\n📄 Ficha del paciente:");
+                        System.out.println("🆔 ID: " + parts[3]);
+                        System.out.println("👤 Nombre: " + parts[4]);
+                        System.out.println("🪪 Documento: " + parts[5]);
+                        System.out.println("🎂 Edad: " + parts[6]);
+                        System.out.println("🚻 Sexo: " + parts[7]);
+                        System.out.println("📧 Email: " + parts[8]);
+                        System.out.println("📅 Fecha de registro: " + parts[9]);
+                        System.out.println("📝 Notas clínicas: " + parts[10]);
+                        System.out.println("✅ Activo: " + parts[11]);
+                        System.out.println("🔒 Checksum FASTA: " + parts[12]);
+                        System.out.println("📦 Tamaño archivo: " + parts[13] + " bytes");
+
+                        // Enfermedades detectadas
+                        String enfermedadesRaw = parts[14];
+                        if (enfermedadesRaw.startsWith("DISEASES=")) {
+                            String enfermedades = enfermedadesRaw.substring("DISEASES=".length());
+                            if ("NONE".equalsIgnoreCase(enfermedades)) {
+                                System.out.println("🧬 Enfermedades detectadas: ninguna");
+                            } else {
+                                System.out.println("🧬 Enfermedades detectadas:");
+                                for (String tag : enfermedades.split(";")) {
+                                    String[] e = tag.replace(")", "").split("\\(");
+                                    String nombre = e[0];
+                                    String severidad = e.length > 1 ? e[1] : "?";
+                                    System.out.println("  - " + nombre + " (severidad " + severidad + ")");
+                                }
+                            }
+                        }
+                    } else {
+                        System.out.println("❌ Error al recuperar paciente: " + response);
+                    }
                 }
+
                 case 3 -> System.out.println("[UPDATE] (pendiente)");
                 case 4 -> System.out.println("[DELETE] (pendiente)");
                 case 5 -> System.out.println("Saliendo...");
