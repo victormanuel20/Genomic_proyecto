@@ -9,6 +9,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.List;
 
 // Clase que gestiona la creación y escritura de un archivo CSV con detecciones
 public class DeteccionesCSV {
@@ -22,21 +23,30 @@ public class DeteccionesCSV {
         init(); // Prepara el archivo si no existe
     }
 
-    // Método privado que inicializa el archivo CSV
+    // Método privado que inicializa el archivo CSV y corrige la cabecera si es necesario
     private void init() {
         try {
             // Crea los directorios si no existen
             if (csv.getParent() != null) Files.createDirectories(csv.getParent());
 
-            // Si el archivo no existe, lo crea y escribe la cabecera
             if (Files.notExists(csv)) {
+                // Si el archivo no existe, lo crea con la cabecera correcta
                 try (BufferedWriter w = Files.newBufferedWriter(csv, StandardCharsets.UTF_8)) {
-                    // Cabecera con los campos que se van a registrar
                     w.write("patient_id,full_name,document_id,disease_id,severity,datetime,description\n");
+                }
+            } else {
+                // Si el archivo existe, verifica y actualiza la cabecera si está mal
+                List<String> lines = Files.readAllLines(csv, StandardCharsets.UTF_8);
+                if (!lines.isEmpty()) {
+                    String actualHeader = lines.get(0).trim().toLowerCase();
+                    String headerEsperado = "patient_id,full_name,document_id,disease_id,severity,datetime,description";
+                    if (!actualHeader.equals(headerEsperado)) {
+                        lines.set(0, headerEsperado); // Corrige la cabecera
+                        Files.write(csv, lines, StandardCharsets.UTF_8);
+                    }
                 }
             }
         } catch (IOException e) {
-            // Si hay error, lanza una excepción con mensaje claro
             throw new RuntimeException("No se pudo preparar detecciones.csv", e);
         }
     }
@@ -83,4 +93,67 @@ public class DeteccionesCSV {
 
         return s; // Si no, devuelve el valor tal cual
     }
+
+    // ================== NUEVO #1: append sobrecargado ==================
+// Útil si desde algún flujo solo tienes patientId/disease/severity/description.
+// Escribe en las columnas de full_name y document_id una cadena vacía (“”).
+    public void append(String patientId, String diseaseId, int severity, String description) {
+        append(patientId, "", "", diseaseId, severity, description);
+    }
+
+// ================== NUEVO #2: listar detecciones por paciente ==================
+    /**
+     * Devuelve una lista de etiquetas "disease_id(severity)" para el patientId dado.
+     * Lee el CSV por nombres de columna, así resiste cambios de orden en el header.
+     * Si el archivo está vacío, no existe o el paciente no tiene detecciones, devuelve lista vacía.
+     */
+    public java.util.List<String> listarEtiquetasPorPaciente(String patientId) {
+        if (patientId == null || patientId.isBlank()) return java.util.List.of();
+        if (!java.nio.file.Files.exists(csv)) return java.util.List.of();
+
+        try {
+            java.util.List<String> lines = java.nio.file.Files.readAllLines(csv, java.nio.charset.StandardCharsets.UTF_8);
+            if (lines.size() <= 1) return java.util.List.of(); // solo cabecera o vacío
+
+            // --- Mapeo de índices por nombre de columna (robusto ante cambios de orden) ---
+            String[] header = lines.get(0).split(",", -1);
+            java.util.Map<String, Integer> idx = new java.util.HashMap<>();
+            for (int i = 0; i < header.length; i++) {
+                idx.put(header[i].trim().toLowerCase(), i);
+            }
+
+            // Tomamos los índices que nos interesan (si no existen, -1)
+            int iPid = idx.getOrDefault("patient_id", -1);
+            int iDis = idx.getOrDefault("disease_id", -1);
+            int iSev = idx.getOrDefault("severity", -1);
+
+            java.util.List<String> out = new java.util.ArrayList<>();
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i).trim();
+                if (line.isEmpty()) continue;
+
+                String[] c = line.split(",", -1);
+                String pid = col(c, iPid);
+                if (!patientId.equals(pid)) continue;
+
+                String disease = col(c, iDis);
+                String sev     = col(c, iSev);
+                if (!disease.isEmpty() && !sev.isEmpty()) {
+                    out.add(disease + "(" + sev + ")");
+                }
+            }
+            return out;
+
+        } catch (java.io.IOException e) {
+            throw new RuntimeException("No se pudo leer detecciones.csv", e);
+        }
+    }
+
+// ================== NUEVO #3: helper de lectura seguro por índice ==================
+    /** Extrae columna segura (devuelve "" si el índice no existe o está fuera de rango). */
+    private static String col(String[] arr, int i) {
+        if (i < 0 || i >= arr.length) return "";
+        return arr[i] == null ? "" : arr[i].trim();
+    }
+
 }
