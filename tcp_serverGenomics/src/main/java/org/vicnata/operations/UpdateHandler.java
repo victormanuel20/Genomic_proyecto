@@ -99,17 +99,14 @@ public class UpdateHandler implements OperationHandler {
 
 
 
-                // --- 4.1) Releer paciente para tener la metadata "fresca" (nombre/doc actualizados) ---
+                // 4.1) Releer paciente para tener la metadata "fresca" (nombre/doc actualizados) ---
                 actual = repo.buscarPorPatientId(patientId).orElse(actual);
 
             // Construimos full_name actual (o el nuevo si llegó FULL_NAME en el UPDATE)
                 String fullNameActual = (safe(actual.getNombre()) + " " + safe(actual.getApellido())).trim();
 
-        // Si en tu UPDATE permites CAMBIAR documento, aquí léelo.
-        // En tu protocolo actual no mandas nuevo documento, así que usamos el vigente:
                 String nuevoDocumento = actual.getDocumentId();
 
-            // Si tu UPDATE puede traer FULL_NAME (p[4]) y quieres priorizarlo si llegó:
                 if (p.length >= 5 && !p[4].equals("-")) {
                     fullNameActual = p[4].trim();
                 }
