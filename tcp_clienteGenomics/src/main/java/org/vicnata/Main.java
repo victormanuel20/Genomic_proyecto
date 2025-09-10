@@ -22,9 +22,8 @@ public class Main {
     public static void main(String[] args) {
 
 
-        // 🔹 opción B (archivo dentro del proyecto):
-        //String rutaFasta = "data/fasta/paciente1.fasta";
 
+        //"C:/Users/User/Desktop/paciente1.fasta";
         ConfigSSL.configurar();
         MenuCliente menuCliente = new MenuCliente();
         menuCliente.mostrar();
