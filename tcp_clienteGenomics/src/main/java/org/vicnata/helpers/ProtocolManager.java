@@ -47,7 +47,7 @@ public class ProtocolManager {
 
             case UPDATE:
                 // TODO: implementar (ej. UPDATE\patientId\campos...)
-                return null;
+                return this.buildUpdateMessage(payload, fastaPath);
 
             case DELETE:
                 // TODO: implementar (ej. DELETE\patientId)
@@ -116,6 +116,40 @@ public class ProtocolManager {
         String pid = payload.getOrDefault("PATIENT_ID", "-");
         String wire = Operacion.DELETE.name() + SEP + val(pid);
         return new Mensaje(Operacion.DELETE, wire);
+    }
+
+
+    // ======= UPDATE =======
+    private Mensaje buildUpdateMessage(Map<String, String> payload, String fastaPath) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(Operacion.UPDATE.name()); // "UPDATE"
+
+        // Campos de metadata en orden fijo
+        // OBLIGATORIO
+        sb.append(SEP).append(val(payload.getOrDefault("PATIENT_ID", "")));
+
+        // OPCIONALES (si no vienen, mandamos "-")
+        sb.append(SEP).append(val(payload.get("EMAIL")));
+        sb.append(SEP).append(val(payload.get("CLINICAL_NOTES"))); // NOTAS
+        sb.append(SEP).append(val(payload.get("FULL_NAME")));
+        sb.append(SEP).append(val(payload.get("AGE")));
+
+        // Bloque FASTA opcional
+        if (fastaPath != null && !fastaPath.isBlank()) {
+            // Extrae header y secuencia, y arma DTO con integridad
+            String headerId = ManejadorFasta.extraerHeaderId(fastaPath);
+            String secuencia = ManejadorFasta.extraerSoloSecuencia(fastaPath);
+            ArchivoFastaDTO fasta = ManejadorFasta.leerFasta(fastaPath, HASH_DEF);
+
+            sb.append(SEP).append(val(headerId));
+            sb.append(SEP).append(val(secuencia));
+            sb.append(SEP).append(String.valueOf(fasta.getTamanoBytes()));
+            sb.append(SEP).append(val(fasta.getAlgoritmoHash()));
+            sb.append(SEP).append(val(fasta.getChecksum()));
+            sb.append(SEP).append(val(fasta.getContenidoBase64()));
+        }
+
+        return new Mensaje(Operacion.UPDATE, sb.toString());
     }
 
     // ----------------- Helpers -----------------

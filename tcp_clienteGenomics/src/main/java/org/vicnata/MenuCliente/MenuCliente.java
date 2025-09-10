@@ -138,7 +138,53 @@ public class MenuCliente {
                     }
                 }
 
-                case 3 -> System.out.println("[UPDATE] (pendiente)");
+                case 3 -> {
+                    System.out.println("\n[UPDATE] Ingresa el patient_id a modificar:");
+                    String patientId = leerNoVacio();
+
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("PATIENT_ID", patientId);
+
+                    System.out.println("¿Deseas actualizar el email? (s/n): ");
+                    if (leerLinea().equalsIgnoreCase("s")) {
+                        System.out.print("Nuevo email: ");
+                        payload.put("EMAIL", leerNoVacio());
+                    }
+
+                    System.out.println("¿Deseas actualizar las notas clínicas? (s/n): ");
+                    if (leerLinea().equalsIgnoreCase("s")) {
+                        System.out.print("Nuevas notas clínicas: ");
+                        payload.put("CLINICAL_NOTES", leerLinea());
+                    }
+
+                    System.out.println("¿Deseas actualizar el nombre completo? (s/n): ");
+                    if (leerLinea().equalsIgnoreCase("s")) {
+                        System.out.print("Nuevo nombre completo: ");
+                        payload.put("FULL_NAME", leerNoVacio());
+                    }
+
+                    System.out.println("¿Deseas actualizar la edad? (s/n): ");
+                    if (leerLinea().equalsIgnoreCase("s")) {
+                        System.out.print("Nueva edad: ");
+                        payload.put("AGE", String.valueOf(leerEnteroSeguro()));
+                    }
+
+                    String rutaFasta = null;
+                    System.out.println("¿Deseas subir un nuevo archivo FASTA? (s/n): ");
+                    if (leerLinea().equalsIgnoreCase("s")) {
+                        System.out.print("Ruta del nuevo archivo FASTA: ");
+                        rutaFasta = leerNoVacio();
+                    }
+
+                    ProtocolManager pm = new ProtocolManager();
+                    Mensaje msg = pm.buildMessage(Operacion.UPDATE, payload, rutaFasta);
+
+                    System.out.println("Lo que se enviará al servidor:");
+                    System.out.println(msg.getPayload());
+
+                    String response = tpcCliente.sendMessage(msg.getPayload());
+                    System.out.println("Respuesta: " + response);
+                }
                 case 4 -> {
                     System.out.println("\n[DELETE] Ingresa el patient_id a inactivar:");
                     String pid = leerNoVacio();

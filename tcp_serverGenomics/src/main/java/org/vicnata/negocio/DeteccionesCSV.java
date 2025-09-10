@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.*;
+import java.nio.file.Files;
+
 
 // Clase que gestiona la creación y escritura de un archivo CSV con detecciones
 public class DeteccionesCSV {
@@ -22,6 +26,8 @@ public class DeteccionesCSV {
         this.csv = Paths.get(rutaCsv);
         init(); // Prepara el archivo si no existe
     }
+
+
 
     // Método privado que inicializa el archivo CSV y corrige la cabecera si es necesario
     private void init() {
@@ -148,6 +154,117 @@ public class DeteccionesCSV {
             throw new RuntimeException("No se pudo leer detecciones.csv", e);
         }
     }
+
+    // ... otros métodos como append, listarEtiquetasPorPaciente, etc.
+
+    // === LECTURA: obtener enfermedades existentes de un patient_id ===
+    public static class DiseaseTag {
+        public final String diseaseId;
+        public final int severity;
+        public DiseaseTag(String diseaseId, int severity) {
+            this.diseaseId = diseaseId; this.severity = severity;
+        }
+    }
+
+    /** Devuelve (enfermedad, severidad) ya registradas para el patient_id. */
+    public List<DiseaseTag> enfermedadesDe(String patientId) {
+        try {
+            if (Files.notExists(csv)) return List.of();
+
+            List<String> lines = Files.readAllLines(csv, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return List.of();
+
+            // Cabecera esperada: patient_id,full_name,document_id,disease_id,severity,datetime,description
+            Map<String, Integer> maxSevPorEnf = new LinkedHashMap<>();
+
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i).trim();
+                if (line.isEmpty()) continue;
+
+                String[] cols = line.split(",", -1);
+                if (cols.length < 7) continue;
+
+                String pid = cols[0];
+                String diseaseId = cols[3];
+                int sev;
+                try { sev = Integer.parseInt(cols[4]); } catch (Exception e) { sev = 0; }
+
+                if (patientId.equals(pid)) {
+                    // Si hay varias filas de la misma enfermedad, nos quedamos con la mayor severidad
+                    maxSevPorEnf.merge(diseaseId, sev, Math::max);
+                }
+            }
+
+            return maxSevPorEnf.entrySet().stream()
+                    .map(e -> new DiseaseTag(e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo leer detecciones de " + patientId, e);
+        }
+    }
+
+    /**
+     * Actualiza full_name y/o document_id en TODAS las filas que tengan el patientId dado.
+     * Si alguno de los nuevos valores es null o vacío, se deja el valor anterior.
+     * Mantiene el resto de columnas (disease_id, severity, datetime, description) tal como están.
+     */
+    public void actualizarMetadataPaciente(String patientId, String nuevoFullName, String nuevoDocumentId) {
+        try {
+            if (Files.notExists(csv)) return; // no hay nada que actualizar
+
+            List<String> lines = Files.readAllLines(csv, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return;
+
+            // Cabecera esperada:
+            // patient_id,full_name,document_id,disease_id,severity,datetime,description
+            List<String> out = new ArrayList<>(lines.size());
+            String headerEsperado = "patient_id,full_name,document_id,disease_id,severity,datetime,description";
+            String header = lines.get(0).trim();
+            if (!header.equalsIgnoreCase(headerEsperado)) {
+                // normalizamos cabecera por si quedó mal en algún momento
+                out.add(headerEsperado);
+            } else {
+                out.add(lines.get(0));
+            }
+
+            // Reescribimos filas
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line == null || line.trim().isEmpty()) { out.add(line); continue; }
+
+                String[] cols = line.split(",", -1); // simple split (tus datos no usan comas internas)
+                if (cols.length < 7) { out.add(line); continue; }
+
+                String pid = cols[0];
+                if (!patientId.equals(pid)) {
+                    out.add(line); // fila de otro paciente
+                    continue;
+                }
+
+                // cols[1] = full_name ; cols[2] = document_id
+                if (nuevoFullName != null && !nuevoFullName.isBlank()) {
+                    cols[1] = csv(nuevoFullName);
+                }
+                if (nuevoDocumentId != null && !nuevoDocumentId.isBlank()) {
+                    cols[2] = csv(nuevoDocumentId);
+                }
+
+                // reconstruir la línea (respetando columnas)
+                String nueva = String.join(",",
+                        cols[0], cols[1], cols[2], cols[3], cols[4], cols[5], cols[6]
+                );
+                out.add(nueva);
+            }
+
+            Files.write(csv, out, StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
+
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo actualizar metadata en detecciones.csv para " + patientId, e);
+        }
+    }
+
+
 
 // ================== NUEVO #3: helper de lectura seguro por índice ==================
     /** Extrae columna segura (devuelve "" si el índice no existe o está fuera de rango). */

@@ -7,7 +7,11 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
+import java.nio.file.Files;
 
 public class GestorCSV {
     private final Path pacientesCsv;
@@ -183,6 +187,85 @@ public class GestorCSV {
             return actualizado;
         } catch (java.io.IOException e) {
             throw new RuntimeException("No se pudo actualizar pacientes.csv", e);
+        }
+    }
+
+
+    public void updateCamposMetadata(String patientId,
+                                     Optional<String> email,
+                                     Optional<String> notas,
+                                     Optional<String> fullName,
+                                     Optional<Integer> age) {
+        try {
+            List<String> lines = Files.readAllLines(pacientesCsv, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return;
+
+            String header = lines.get(0); // conserva cabecera
+            List<String> out = new ArrayList<>();
+            out.add(header);
+
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.trim().isEmpty()) continue;
+
+                String[] cols = line.split(",", -1);
+                // Esperado: patient_id, full_name, document_id, age, sex, contact_email,
+                //           registration_date, clinical_notes, checksum_fasta, file_size_bytes, active
+                if (cols.length < 11) { out.add(line); continue; }
+
+                if (cols[0].equals(patientId)) {
+                    // full_name
+                    if (fullName.isPresent() && !fullName.get().isBlank()) {
+                        cols[1] = csv(fullName.get());
+                    }
+                    // age
+                    if (age.isPresent()) {
+                        cols[3] = String.valueOf(age.get());
+                    }
+                    // contact_email
+                    if (email.isPresent() && !email.get().isBlank()) {
+                        cols[5] = csv(email.get());
+                    }
+                    // clinical_notes
+                    if (notas.isPresent()) {
+                        cols[7] = csv(notas.get() == null ? "" : notas.get());
+                    }
+                    line = String.join(",", cols);
+                }
+                out.add(line);
+            }
+            Files.write(pacientesCsv, out, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo actualizar metadata en pacientes.csv", e);
+        }
+    }
+
+    public void updateChecksumYSize(String patientId, String checksum, long size) {
+        try {
+            List<String> lines = Files.readAllLines(pacientesCsv, StandardCharsets.UTF_8);
+            if (lines.isEmpty()) return;
+
+            String header = lines.get(0);
+            List<String> out = new ArrayList<>();
+            out.add(header);
+
+            for (int i = 1; i < lines.size(); i++) {
+                String line = lines.get(i);
+                if (line.trim().isEmpty()) continue;
+
+                String[] cols = line.split(",", -1);
+                if (cols.length < 11) { out.add(line); continue; }
+
+                if (cols[0].equals(patientId)) {
+                    cols[8]  = csv(checksum == null ? "" : checksum);
+                    cols[9]  = String.valueOf(size);
+                    line = String.join(",", cols);
+                }
+                out.add(line);
+            }
+            Files.write(pacientesCsv, out, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            throw new RuntimeException("No se pudo actualizar checksum/size en pacientes.csv", e);
         }
     }
 
