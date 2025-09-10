@@ -2,3 +2,6 @@ disease_id,name,severity
 sarscov2,SARS-CoV-2,9
 influenza,Influenza A/H1N1,7
 anemia_falciforme,Anemia Falciforme,8
+zika,Zika virus,8
+dengue,Dengue virus,7
+ebola,Ebola virus,9
