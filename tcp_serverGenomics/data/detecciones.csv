@@ -37,3 +37,6 @@ P-0019,Monica jaramillo,0987654321,sarscov2,9,2025-09-09T23:30:29.7015411,Matche
 P-0020,Maria Gonzales,2789096521,dengue,7,2025-09-10T12:16:33.8699947,Matched 7/9 bases (77%)
 P-0020,Maria Gonzales,2789096521,influenza,7,2025-09-10T12:16:33.8812283,Matched 4/5 bases (80%)
 P-0020,Maria Gonzales,2789096521,sarscov2,9,2025-09-10T12:16:33.8832292,Matched 5/5 bases (100%)
+P-0021,Luis Gonzales,1002593267,dengue,7,2025-09-10T12:39:02.4761558,Matched 7/9 bases (77%)
+P-0021,Luis Gonzales,1002593267,influenza,7,2025-09-10T12:39:02.4939165,Matched 4/5 bases (80%)
+P-0021,Luis Gonzales,1002593267,sarscov2,9,2025-09-10T12:39:02.4939165,Matched 5/5 bases (100%)

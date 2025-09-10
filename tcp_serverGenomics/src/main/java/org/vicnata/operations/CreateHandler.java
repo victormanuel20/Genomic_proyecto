@@ -36,6 +36,29 @@ public class CreateHandler implements OperationHandler {
         String email       = p[6];
         String notas       = p[7];
         String secuencia   = p[9];
+        String headerId  =   p[8];
+
+        // 0) VALIDAR FASTA (obligatorio)
+        try {
+            org.vicnata.validadores.ValidadorSecuencia.validarHeaderYSecuencia(headerId, secuencia);
+
+            // Si llegó el bloque exacto (size/hash/checksum/base64): validar integridad
+            if (p.length >= 14) {
+                Long size = null;
+                try { size = Long.parseLong(p[10]); } catch (Exception ignored) {}
+                String hashAlgo = p[11];
+                String checksum = p[12];
+                String base64   = p[13];
+
+                org.vicnata.validadores.ValidadorSecuencia
+                        .validarTamanoYChecksum(base64, hashAlgo, checksum, size);
+            }
+        } catch (IllegalArgumentException ve) {
+            logger.registrar("CREATE", "INVALID", null, docId, ve.getMessage());
+            return ProtocolManager.error("CREATE", "INVALID|" + ve.getMessage());
+        }
+
+
 
         String sizeBytes = (p.length >= 11 ? p[10] : null);
         String hashAlgo  = (p.length >= 12 ? p[11] : null);
