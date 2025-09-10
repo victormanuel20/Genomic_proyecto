@@ -9,6 +9,8 @@ import org.vicnata.enums.sexo;
 @AllArgsConstructor
 @NoArgsConstructor
 
+
+//Se tiene la metada del paciente
 public class PacienteDTO {
 
     private String nombre;

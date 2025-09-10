@@ -46,11 +46,11 @@ public class ProtocolManager {
                 return this.buildRetrieveMessage(payload);
 
             case UPDATE:
-                // TODO: implementar (ej. UPDATE\patientId\campos...)
+
                 return this.buildUpdateMessage(payload, fastaPath);
 
             case DELETE:
-                // TODO: implementar (ej. DELETE\patientId)
+
                 return this.buildDeleteMessage(payload);
 
             default:

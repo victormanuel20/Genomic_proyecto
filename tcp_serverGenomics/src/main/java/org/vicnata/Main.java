@@ -3,7 +3,6 @@ package org.vicnata;
 import org.vicnata.config.ConfigSSL;
 import org.vicnata.helpers.GestorPropiedades;
 import org.vicnata.red.TCPServer;
-import org.vicnata.red.TCPServer1;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
