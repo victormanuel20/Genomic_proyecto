@@ -208,6 +208,8 @@ public class MenuCliente {
     }
 
     /** Pide datos al usuario y construye un PacienteDTO con su ArchivoFastaDTO */
+    // CLIENTE — dentro de org.vicnata.MenuCliente.MenuCliente
+
     private PacienteDTO readPacienteInfo() {
         PacienteDTO p = new PacienteDTO();
 
@@ -238,16 +240,27 @@ public class MenuCliente {
         System.out.print("Notas clínicas: ");
         p.setClinicalNotes(leerLinea());
 
-        System.out.print("Ruta archivo FASTA: ");
-        String rutaFasta = leerNoVacio();
+        // === NUEVO: pedir y validar ruta FASTA en un bucle ===
+        String rutaFasta;
+        while (true) {
+            System.out.print("Ruta archivo FASTA: ");
+            rutaFasta = leerNoVacio();
+            try {
+                ManejadorFasta.validarRutaFasta(rutaFasta); // ⬅ valida existencia, extensión y lectura
+                break; // ok, salimos del bucle
+            } catch (IllegalArgumentException ex) {
+                System.out.println("❌ " + ex.getMessage());
+            }
+        }
 
-        // Usamos tu manejador de FASTA para crear el DTO con checksum y base64
+        // Si pasó la validación, ahora sí creamos el DTO con hash/base64
         ArchivoFastaDTO fasta = ManejadorFasta.leerFasta(rutaFasta, HASH_DEF);
-        fasta.setRuta(rutaFasta); // ← aquí guardas la ruta completa
+        fasta.setRuta(rutaFasta); // guardas la ruta original para mostrarla si quieres
         p.setGenoma(fasta);
 
         return p;
     }
+
 
     // ========= Helpers de entrada =========
 

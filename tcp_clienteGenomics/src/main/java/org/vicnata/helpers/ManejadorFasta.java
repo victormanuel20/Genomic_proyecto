@@ -126,6 +126,49 @@ public class ManejadorFasta {
         }
     }
 
+    /**
+     * Valida que la ruta exista, sea un archivo legible y termine en .fasta (case-insensitive).
+     * Lanza IllegalArgumentException con mensajes claros si algo falla.
+     */
+    public static void validarRutaFasta(String ruta) {
+        if (ruta == null) {
+            throw new IllegalArgumentException("Ruta FASTA nula.");
+        }
+
+        // Limpieza básica de comillas accidentales al pegar rutas
+        String limpia = ruta.trim().replace("\"","").replace("'","");
+
+        if (limpia.isEmpty()) {
+            throw new IllegalArgumentException("Ruta FASTA vacía.");
+        }
+
+        Path p = Path.of(limpia);
+
+        if (!Files.exists(p)) {
+            throw new IllegalArgumentException("El archivo no existe: " + limpia);
+        }
+        if (!Files.isRegularFile(p)) {
+            throw new IllegalArgumentException("La ruta no es un archivo: " + limpia);
+        }
+        if (!Files.isReadable(p)) {
+            throw new IllegalArgumentException("El archivo no es legible: " + limpia);
+        }
+
+        String name = p.getFileName().toString().toLowerCase();
+        if (!name.endsWith(".fasta")) {
+            throw new IllegalArgumentException("El archivo debe tener extensión .fasta");
+        }
+
+        try {
+            long size = Files.size(p);
+            if (size <= 0) {
+                throw new IllegalArgumentException("El archivo FASTA está vacío.");
+            }
+        } catch (Exception e) {
+            throw new IllegalArgumentException("No se pudo verificar el tamaño del archivo.", e);
+        }
+    }
+
 
 
 }
